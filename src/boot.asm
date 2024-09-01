@@ -21,14 +21,16 @@ stage1:
 	mov ss, ax
 	mov sp, ax ; sp require direclty be set
 	sti
+	jmp enable_A20
 
-.enable_A20:
+enable_A20:
 	; Fast A20 Gate 
 	in al, 0x92
 	or al, 2
 	out 0x92, al
+	jmp enter_protected
 
-.enter_protected:
+enter_protected:
 	cli
 	lgdt[gdt_desc]
 	xor eax, eax ; empty eax register for clean setup
@@ -70,7 +72,60 @@ gdt_desc:
 
 [BITS 32]
 load32:
-	jmp $
+	mov eax, 1
+	mov ecx, 100
+	mov edi, 0x0100000
+	call read_disk
+	jmp CODE_SEG:0x0100000
+
+; Read disk in LBA mode
+read_disk:
+	mov ebx, eax 		; Save LBA in EBX
+	
+	mov dx, 0x01F6		; Port to send drive and bit 24-27 of LBA
+	shr eax, 24		; Get bit 24-27 in al
+	or al, 11100000b	; Set bit 6 in al for LBA mode (0xE0)
+	out dx, al
+
+	mov dx, 0x01F2		; Port to send number of sectors
+	mov eax, ecx		; Get number of sectors from CL
+	out dx, al
+
+	mov dx, 0x1F3		; Port to send bit 0-7 of LBA
+	mov eax, ebx		; Get LBA from EBX
+	out dx, al
+
+	mov dx, 0x1F4		; Port to send bit 8-15 of LBA
+	mov eax, ebx		; Get LBA from EBX
+	shr eax, 8		; Get bit 8-15 in AL
+	out dx, al
+
+	mov dx, 0x1F5		; Port to send bit 16-23 of LBA
+	mov eax, ebx		; Get LBA from EBX
+	shr eax, 16		; Get bit 16-23 in AL
+	out dx, al
+
+	mov dx, 0x1F7		; Command port
+	mov al, 0x20		; Read with retry
+	out dx, al
+
+.read_next_sector:
+	push ecx 		; save ecx value for next iteration
+
+.retry_read:
+	mov dx, 0x1F7		; we are looping so every loop set dx to 0x1F7
+	in al, dx
+	test al, 8		; the sector buffer requires servicing
+	jz .retry_read		; until the sector buffer is ready
+	
+	; buffer is ready so we read 512 byte
+	mov ecx, 256		; ECX is counter for INSW
+	mov edx, 0x1F0		; Data port, in and out
+	rep insw		; in to [RDI] 
+	pop ecx			; restore ecx value for decreasing in end of iteration (100..1)
+	loop .read_next_sector
+	; when we read all sectors reach here
+	ret
 
 times 510-($-$$) db 0
 dw 0xAA55
