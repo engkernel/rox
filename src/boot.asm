@@ -1,5 +1,5 @@
-BITS 16
 ORG 0x7c00
+BITS 16
 
 CODE_SEG equ gdt_code - gdt_start
 DATA_SEG equ gdt_data - gdt_start
@@ -11,7 +11,7 @@ _start:
 times 33 db 0 ; 33 byte is for BPB Bios for future use
 
 start:
-	jmp 0: stage1
+	jmp 0:stage1
 
 stage1:
 	cli
@@ -19,23 +19,15 @@ stage1:
 	mov ds, ax
 	mov es, ax
 	mov ss, ax
-	mov sp, ax ; sp require direclty be set
+	mov sp, 0x7c00 ; sp require direclty be set
 	sti
-	jmp enable_A20
 
-enable_A20:
-	; Fast A20 Gate 
-	in al, 0x92
-	or al, 2
-	out 0x92, al
-	jmp enter_protected
-
-enter_protected:
+	; load GDT to jump to protected mode
 	cli
-	lgdt[gdt_desc]
-	xor eax, eax ; empty eax register for clean setup
+	lgdt [gdt_desc]
+
 	mov eax, cr0
-	or al, 0x1
+	or eax, 0x1
 	mov cr0, eax
 		
 	jmp CODE_SEG:load32
@@ -53,7 +45,7 @@ gdt_code: ; Kernel Code Segment
 	dw 0xffff ; Segment Len(0-15)
 	dw 0	  ; Segment Base(16-31)
 	db 0	  ; Low Base (16-23)
-	dw 0x9a   ; Access byte include type and how access(8-15)
+	db 0x9a   ; Access byte include type and how access(8-15)
 	db 11001111b ; high and low 4 bit flag(16-23)
 	db 0	  ; High Base(24-31)
 
@@ -62,7 +54,7 @@ gdt_data: ; Kernel Data Segment
 	dw 0xffff ; Segment Len(0-15)
 	dw 0	  ; Segment Base(16-31)
 	db 0	  ; Low Base (16-23)
-	dw 0x92   ; Access byte include type and how access(8-15)
+	db 0x92   ; Access byte include type and how access(8-15)
 	db 11001111b ; high and low 4 bit flag(16-23)
 	db 0	  ; High Base(24-31)
 gdt_end:
@@ -72,6 +64,11 @@ gdt_desc:
 
 [BITS 32]
 load32:
+	; Fast A20 Gate 
+	in al, 0x92
+	or al, 2
+	out 0x92, al
+
 	mov eax, 1
 	mov ecx, 100
 	mov edi, 0x0100000
@@ -82,9 +79,9 @@ load32:
 read_disk:
 	mov ebx, eax 		; Save LBA in EBX
 	
-	mov dx, 0x01F6		; Port to send drive and bit 24-27 of LBA
+	mov dx, 0x1F6		; Port to send drive and bit 24-27 of LBA
 	shr eax, 24		; Get bit 24-27 in al
-	or al, 11100000b	; Set bit 6 in al for LBA mode (0xE0)
+	or eax, 11100000b	; Set bit 6 in al for LBA mode (0xE0)
 	out dx, al
 
 	mov dx, 0x01F2		; Port to send number of sectors
@@ -120,7 +117,7 @@ read_disk:
 	
 	; buffer is ready so we read 512 byte
 	mov ecx, 256		; ECX is counter for INSW
-	mov edx, 0x1F0		; Data port, in and out
+	mov dx, 0x1F0		; Data port, in and out
 	rep insw		; in to [RDI] 
 	pop ecx			; restore ecx value for decreasing in end of iteration (100..1)
 	loop .read_next_sector
