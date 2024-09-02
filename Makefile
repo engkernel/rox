@@ -1,7 +1,7 @@
 include config.make
 
-FILES = ./build/kernel.asm.o ./build/kernel.o
-FLAGS = -g -ffreestanding -falign-jumps -falign-functions -falign-labels -falign-loops -fstrength-reduce -fomit-frame-pointer -finline-functions -Wno-unused-function -fno-builtin -Werror -Wno-unused-label -Wno-cpp -Wno-unused-parameter -nostdlib -nostartfiles -nodefaultlibs -Wall -O0 -Iinc
+FILES = ./build/kernel.asm.o ./build/kernel.o ./build/console.o
+CFLAGS = -g -ffreestanding -falign-jumps -falign-functions -falign-labels -falign-loops -fstrength-reduce -fomit-frame-pointer -finline-functions -Wno-unused-function -fno-builtin -Werror -Wno-unused-label -Wno-cpp -Wno-unused-parameter -nostdlib -nostartfiles -nodefaultlibs -Wall -O0 -Iinc
 INCLUDES = -I./src
 
 all: ./bin/boot.bin ./bin/kernel.bin
@@ -13,7 +13,7 @@ all: ./bin/boot.bin ./bin/kernel.bin
 	
 ./bin/kernel.bin: $(FILES)
 	$(LD) -g -relocatable $(FILES) -o ./build/kernelfull.o	
-	$(CC) $(FLAGS) -T ./src/linker.ld -o $@ -ffreestanding -O0 -nostdlib ./build/kernelfull.o
+	$(CC) $(CFLAGS) -T ./src/linker.ld -o $@ -ffreestanding -O0 -nostdlib ./build/kernelfull.o
 
 ./bin/boot.bin: ./src/boot.asm
 	$(ASM) -f bin $< -o $@
@@ -22,7 +22,10 @@ all: ./bin/boot.bin ./bin/kernel.bin
 	$(ASM) -f elf $< -o $@
 
 ./build/kernel.o: ./src/kernel.c
-	$(CC) $(INCLUDE) $(FLAGS) -std=gnu99 -c $< -o $@
+	$(CC) $(INCLUDE) $(CFLAGS) -std=gnu99 -c $< -o $@
+
+./build/console.o: ./src/console.c
+	$(CC) $(INCLUDE) $(CFLAGS) -std=gnu99 -c $< -o $@
 
 clean:
 	rm -rf $(FILES)
