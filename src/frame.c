@@ -1,4 +1,5 @@
 #include "frame.h"
+#include "status.h"
 
 struct frames* kernel_frames;
 struct frame_table* kernel_frame_table;
@@ -102,4 +103,28 @@ void* kernel_frame_alloc(struct frames* frames, size_t size)
 	total_frames = aligned_size / FRAME_SIZE;
 
 	return frame_alloc(frames, total_frames);
+}
+
+int address_to_frame(struct frames* frames, void* address)
+{
+	return ((int)(adress - frames->saddr) / FRAME_SIZE);
+}
+
+void mark_frames_as_free(struct frames* frames, int starting_frame)
+{
+	struct frame_table* table = frames->table;
+	for (int i = starting_block; i < (int)table->total; i++)
+	{
+		FRAME_TABLE_ENTRY entry = table->entries[i];
+		table->entries[i] = FRAME_IS_FREE;
+		if (!(entry & FRAME_HAS_NEXT))
+		{
+			break;
+		}
+	}
+}
+
+void kernel_frame_free(struct frames* frames, void* ptr)
+{
+	mark_frames_as_free(frames, address_to_frame(frames, ptr));
 }
