@@ -1,8 +1,8 @@
 include config.make
 
-FILES = ./build/kernel.asm.o ./build/kernel.o ./build/string.o ./build/console.o ./build/frame.o ./build/kheap.o ./build/memory.o ./build/errors.o
+FILES = ./build/kernel/kernel.asm.o ./build/kernel/kernel.o ./build/helper/string.o ./build/helper/console.o ./build/mm/frame.o ./build/mm/kheap.o ./build/mm/memory.o ./build/helper/errors.o
 CFLAGS = -g -ffreestanding -falign-jumps -falign-functions -falign-labels -falign-loops -fstrength-reduce -fomit-frame-pointer -finline-functions -Wno-unused-function -fno-builtin -Werror -Wno-unused-label -Wno-cpp -Wno-unused-parameter -nostdlib -nostartfiles -nodefaultlibs -Wall -O0 -Iinc
-INCLUDES = -I./src
+INCLUDE = -I./src
 
 all: ./bin/boot.bin ./bin/kernel.bin
 	rm -rf ./bin/os.bin
@@ -15,31 +15,39 @@ all: ./bin/boot.bin ./bin/kernel.bin
 	$(LD) -g -relocatable $(FILES) -o ./build/kernelfull.o	
 	$(CC) $(CFLAGS) -T ./src/linker.ld -o $@ -ffreestanding -O0 -nostdlib ./build/kernelfull.o
 
-./bin/boot.bin: ./src/boot.asm
+./bin/boot.bin: ./src/boot/boot.asm
 	$(ASM) -f bin $< -o $@
 
-./build/kernel.asm.o: ./src/kernel.asm
+./build/kernel/kernel.asm.o: ./src/kernel/kernel.asm
+	@mkdir -p $(@D)
 	$(ASM) -f elf $< -o $@
 
-./build/kernel.o: ./src/kernel.c
+./build/kernel/kernel.o: ./src/kernel/kernel.c
+	@mkdir -p $(@D)
 	$(CC) $(INCLUDE) $(CFLAGS) -std=gnu99 -c $< -o $@
 
-./build/string.o: ./src/string.c
+./build/helper/string.o: ./src/helper/string.c
+	@mkdir -p $(@D)
 	$(CC) $(INCLUDE) $(CFLAGS) -std=gnu99 -c $< -o $@
 
-./build/console.o: ./src/console.c
+./build/helper/console.o: ./src/helper/console.c
+	@mkdir -p $(@D)
 	$(CC) $(INCLUDE) $(CFLAGS) -std=gnu99 -c $< -o $@
 	
-./build/frame.o: ./src/frame.c
+./build/mm/frame.o: ./src/mm/frame.c
+	@mkdir -p $(@D)
 	$(CC) $(INCLUDE) $(CFLAGS) -std=gnu99 -c $< -o $@
 
-./build/kheap.o: ./src/kheap.c
+./build/mm/kheap.o: ./src/mm/kheap.c
+	@mkdir -p $(@D)
 	$(CC) $(INCLUDE) $(CFLAGS) -std=gnu99 -c $< -o $@
 
-./build/memory.o: ./src/memory.c
+./build/mm/memory.o: ./src/mm/memory.c
+	@mkdir -p $(@D)
 	$(CC) $(INCLUDE) $(CFLAGS) -std=gnu99 -c $< -o $@
 
-./build/errors.o: ./src/errors.c
+./build/helper/errors.o: ./src/helper/errors.c
+	@mkdir -p $(@D)
 	$(CC) $(INCLUDE) $(CFLAGS) -std=gnu99 -c $< -o $@
 
 clean:

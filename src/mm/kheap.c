@@ -1,8 +1,8 @@
 #include "kheap.h"
-#include "memory.h"
-#include "frame.h"
-#include "errors.h"
-#include "console.h"
+#include "mm/memory.h"
+#include "mm/frame.h"
+#include "helper/errors.h"
+#include "helper/console.h"
 
 struct frames kernel_frames;
 struct frame_table kernel_frame_table;

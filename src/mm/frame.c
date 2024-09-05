@@ -1,7 +1,7 @@
-#include "frame.h"
-#include "memory.h"
+#include "mm/frame.h"
+#include "mm/memory.h"
 #include "status.h"
-#include "errors.h"
+#include "helper/errors.h"
 
 static int validate_table(void* first, void* end, struct frame_table* table)
 {

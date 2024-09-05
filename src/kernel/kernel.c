@@ -1,6 +1,6 @@
 #include <stdint.h>
-#include "console.h"
-#include "kheap.h"
+#include "helper/console.h"
+#include "mm/kheap.h"
 
 void kernel_start()
 {
