@@ -5,5 +5,5 @@ Steps to Consider:
 - ~~Error prints and Panic~~
 - Interrupts
 - ~~Frame Management~~
-- ~~Heap Management~~ BUGGY
+- ~~Heap Management~~ 
 - debug and error printing(formatted)

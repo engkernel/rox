@@ -1,5 +1,6 @@
 #include "console.h"
 #include <stdint.h>
+#include <stdarg.h>
 
 uint16_t* video_mem = 0;
 uint8_t SCR_COL = 0;
@@ -35,12 +36,45 @@ void print_char(char c, char color)
 
 }
 
-void print(const char* str)
+void print(const char* fmt,...)
 {
-	while (*str)
+	va_list args;
+	va_start(args,  fmt);
+
+	while (*fmt)
 	{
-		print_char(*str, DEF_COLOR);
-		str++;
+		if (*fmt == '%')
+		{
+		 fmt++;
+		
+		 switch(*fmt)
+		 {
+			case 'd': {
+				int val = va_arg(args, int);
+				print_char(val, DEF_COLOR);
+				break;
+			}
+			case 's': {
+				const char* str = va_arg(args, const char*);
+				print(str, DEF_COLOR);
+				break;
+			}
+			case 'c':{
+				char c = (char)va_arg(args, int);
+				print_char(c, DEF_COLOR);
+				break;
+			}
+			default:
+				print_char('%', DEF_COLOR);
+				print_char(*fmt, DEF_COLOR);
+				break;
+		 }	
+		}
+		else
+		{
+		print_char(*fmt, DEF_COLOR);
+		fmt++;
+		}
 	}
 }
 

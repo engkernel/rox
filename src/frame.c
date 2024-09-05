@@ -1,6 +1,24 @@
 #include "frame.h"
 #include "memory.h"
 #include "status.h"
+#include "errors.h"
+
+static int validate_table(void* first, void* end, struct frame_table* table)
+{
+	int res = 0;
+
+	size_t table_size = (size_t)(end - first);
+	size_t total_frames = table_size / FRAME_SIZE;
+	if (table->total != total_frames)
+	{
+		res = -EINVARG;
+		panic("table size is not correct");
+		goto out;
+	}
+
+out:
+	return res;
+}
 
 bool frames_validate_alignment(void* frame_ptr)
 {
@@ -13,11 +31,14 @@ int kernel_frames_create(struct frames* frames, void* first_frame, void* last_fr
 	if (!frames_validate_alignment(first_frame) || !frames_validate_alignment(last_frame))
 	{
 		res = -EINVARG;
+		panic("frame table is not aligned");
 		goto out;
 	}
 	memset(frames, 0, sizeof(struct frames));
 	frames->saddr = first_frame;
 	frames->table = table;
+
+	res = validate_table(first_frame, last_frame, table);
 	if (res < 0)
 	{
 		goto out;
@@ -64,7 +85,7 @@ int get_start_frame(struct frames* frames, int total_frames)
 		// if thisi s first frame we found
 		if (fs == -1)
 		{
-			fc = i;
+			fs = i;
 		}
 		fc++;
 		if (fc == total_frames)
@@ -74,6 +95,7 @@ int get_start_frame(struct frames* frames, int total_frames)
 	}
 	if (fs == -1)
 	{
+		panic("fs count in get_start_frame is still -1");
 		return -ENOMEM;
 	}
 

@@ -2,6 +2,7 @@
 #include "memory.h"
 #include "frame.h"
 #include "errors.h"
+#include "console.h"
 
 struct frames kernel_frames;
 struct frame_table kernel_frame_table;
@@ -11,8 +12,8 @@ void kheap_init()
 	kernel_frame_table.entries = (FRAME_TABLE_ENTRY*)(FRAME_TABLE_ADDRESS);
 	kernel_frame_table.total = FRAME_PHYSICAL_SIZE_BYTE / FRAME_SIZE;
 
-	void* last_frame = (void*)FRAME_TABLE_ADDRESS + FRAME_PHYSICAL_SIZE_BYTE;
-	int res = kernel_frames_create(&kernel_frames, (void*)(FRAME_TABLE_ADDRESS), last_frame, &kernel_frame_table);
+	void* last_frame = (void*)FIRST_FRAME_ADDRESS + FRAME_PHYSICAL_SIZE_BYTE;
+	int res = kernel_frames_create(&kernel_frames, (void*)(FIRST_FRAME_ADDRESS), last_frame, &kernel_frame_table);
 	if (res < 0)
 	{
 		panic("frames manager failed");

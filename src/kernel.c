@@ -7,7 +7,9 @@ void kernel_start()
 	scr_init();
 	kheap_init();
 	void* ptr = kmalloc(1252);
-	if (ptr)
+	if (ptr != NULL)
 	{
+		print("ptr allocated");
+		kfree(ptr);
 	}
 }
