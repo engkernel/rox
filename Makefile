@@ -1,6 +1,6 @@
 include config.make
 
-FILES = ./build/kernel/kernel.asm.o ./build/kernel/kernel.o ./build/helper/string.o ./build/helper/console.o ./build/mm/frame.o ./build/mm/kheap.o ./build/mm/memory.o ./build/helper/errors.o
+FILES = ./build/kernel/kernel.asm.o ./build/kernel/kernel.o ./build/helper/string.o ./build/helper/console.o ./build/mm/frame.o ./build/mm/kheap.o ./build/mm/memory.o ./build/helper/errors.o ./build/io/io.asm.o
 CFLAGS = -g -ffreestanding -falign-jumps -falign-functions -falign-labels -falign-loops -fstrength-reduce -fomit-frame-pointer -finline-functions -Wno-unused-function -fno-builtin -Werror -Wno-unused-label -Wno-cpp -Wno-unused-parameter -nostdlib -nostartfiles -nodefaultlibs -Wall -O0 -Iinc
 INCLUDE = -I./src
 
@@ -49,6 +49,11 @@ all: ./bin/boot.bin ./bin/kernel.bin
 ./build/helper/errors.o: ./src/helper/errors.c
 	@mkdir -p $(@D)
 	$(CC) $(INCLUDE) $(CFLAGS) -std=gnu99 -c $< -o $@
+
+./build/io/io.asm.o: ./src/io/io.asm
+	@mkdir -p $(@D)
+	$(ASM) -f elf $< -o $@
+	
 
 clean:
 	rm -rf $(FILES)
