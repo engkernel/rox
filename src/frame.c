@@ -1,9 +1,34 @@
 #include "frame.h"
+#include "memory.h"
 #include "status.h"
 
-struct frames* kernel_frames;
-struct frame_table* kernel_frame_table;
+bool frames_validate_alignment(void* frame_ptr)
+{
+	return ((unsigned int)frame_ptr % FRAME_SIZE) == 0;
+}
 
+int kernel_frames_create(struct frames* frames, void* first_frame, void* last_frame, struct frame_table* table)
+{
+	int res = 0;
+	if (!frames_validate_alignment(first_frame) || !frames_validate_alignment(last_frame))
+	{
+		res = -EINVARG;
+		goto out;
+	}
+	memset(frames, 0, sizeof(struct frames));
+	frames->saddr = first_frame;
+	frames->table = table;
+	if (res < 0)
+	{
+		goto out;
+	}
+
+	size_t table_size = sizeof(FRAME_TABLE_ENTRY) * table->total;
+	memset(table->entries, FRAME_IS_FREE,  table_size);
+
+out:
+	return res;
+}
 
 uint32_t align_frame_size_to_upper(uint32_t size)
 {
@@ -27,7 +52,7 @@ int get_start_frame(struct frames* frames, int total_frames)
 	struct frame_table* table = frames->table;
 	int fc = 0;
 	int fs = -1;
-	for (int i = 0; i < frames->total; i++)
+	for (int i = 0; i < table->total; i++)
 	{
 		if (frame_get_entry_type(table->entries[i]) != FRAME_IS_FREE)
 		{
@@ -37,7 +62,7 @@ int get_start_frame(struct frames* frames, int total_frames)
 		}
 
 		// if thisi s first frame we found
-		if (fs = -1)
+		if (fs == -1)
 		{
 			fc = i;
 		}
@@ -100,20 +125,20 @@ out:
 void* kernel_frame_alloc(struct frames* frames, size_t size)
 {
 	int aligned_size = align_frame_size_to_upper(size);
-	total_frames = aligned_size / FRAME_SIZE;
+	int total_frames = aligned_size / FRAME_SIZE;
 
 	return frame_alloc(frames, total_frames);
 }
 
 int address_to_frame(struct frames* frames, void* address)
 {
-	return ((int)(adress - frames->saddr) / FRAME_SIZE);
+	return ((int)(address - frames->saddr) / FRAME_SIZE);
 }
 
 void mark_frames_as_free(struct frames* frames, int starting_frame)
 {
 	struct frame_table* table = frames->table;
-	for (int i = starting_block; i < (int)table->total; i++)
+	for (int i = starting_frame; i < (int)table->total; i++)
 	{
 		FRAME_TABLE_ENTRY entry = table->entries[i];
 		table->entries[i] = FRAME_IS_FREE;

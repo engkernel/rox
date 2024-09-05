@@ -1,6 +1,6 @@
 include config.make
 
-FILES = ./build/kernel.asm.o ./build/kernel.o ./build/string.o ./build/console.o
+FILES = ./build/kernel.asm.o ./build/kernel.o ./build/string.o ./build/console.o ./build/frame.o ./build/kheap.o ./build/memory.o ./build/errors.o
 CFLAGS = -g -ffreestanding -falign-jumps -falign-functions -falign-labels -falign-loops -fstrength-reduce -fomit-frame-pointer -finline-functions -Wno-unused-function -fno-builtin -Werror -Wno-unused-label -Wno-cpp -Wno-unused-parameter -nostdlib -nostartfiles -nodefaultlibs -Wall -O0 -Iinc
 INCLUDES = -I./src
 
@@ -28,6 +28,18 @@ all: ./bin/boot.bin ./bin/kernel.bin
 	$(CC) $(INCLUDE) $(CFLAGS) -std=gnu99 -c $< -o $@
 
 ./build/console.o: ./src/console.c
+	$(CC) $(INCLUDE) $(CFLAGS) -std=gnu99 -c $< -o $@
+	
+./build/frame.o: ./src/frame.c
+	$(CC) $(INCLUDE) $(CFLAGS) -std=gnu99 -c $< -o $@
+
+./build/kheap.o: ./src/kheap.c
+	$(CC) $(INCLUDE) $(CFLAGS) -std=gnu99 -c $< -o $@
+
+./build/memory.o: ./src/memory.c
+	$(CC) $(INCLUDE) $(CFLAGS) -std=gnu99 -c $< -o $@
+
+./build/errors.o: ./src/errors.c
 	$(CC) $(INCLUDE) $(CFLAGS) -std=gnu99 -c $< -o $@
 
 clean:
